@@ -84,12 +84,12 @@ runs:
                 for item in content_file
               ]              
               content_file_filtered = [
-                {"name": item["name"], "password": item["login"]["password"]}
+                {"name": item["name"], "password": item["password"]}
                 for item in content_file
                 if not str(item["name"]).endswith("_b64")
               ]
               content_file_b64_filtered = [
-                {"name":  str(item["name"]).rstrip("_b64"), "password": base64.b64decode(item["login"]["password"]).decode()}
+                {"name":  str(item["name"]).rstrip("_b64"), "password": base64.b64decode(item["password"]).decode()}
                 for item in content_file
                 if str(item["name"]).endswith("_b64")
               ]              
