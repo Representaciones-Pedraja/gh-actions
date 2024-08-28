@@ -36,4 +36,5 @@ runs:
             sudo docker compose -p  ${{ inputs.compose-name}} start
 
       - name: Notify Command Success
+        shell: bash
         run: echo "Command executed on   ${{ inputs.ssh-host }} successfully!"
