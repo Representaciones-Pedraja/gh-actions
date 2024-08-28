@@ -67,6 +67,7 @@ runs:
       run: |
         import json
         import os
+        import base64
 
         folders_name_str = "${{ inputs.vault-folders }}"
         folders_name= folders_name_str.split(',')
@@ -81,7 +82,15 @@ runs:
               content_file_filtered = [
                 {"name": item["name"], "password": item["login"]["password"]}
                 for item in content_file
+                if not str(item["name"]).endswith("_b64")
               ]
+              content_file_b64_filtered = [
+                {"name":  str(item["name"]).rstrip("_b64"), "password": base64.b64decode(item["login"]["password"]).decode()}
+                for item in content_file
+                if str(item["name"]).endswith("_b64")
+              ]
+              content_file_filtered.extend(content_file_b64_filtered)
+
               result.extend(content_file_filtered)
             os.remove(file_name)
 
