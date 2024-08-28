@@ -1,0 +1,114 @@
+name: 'Get secrets'
+description: 'Get secrets from bw'
+inputs:
+  bw-cli-path:
+    description: 'Bw cli path'
+    required: true
+    default:  https://github.com/bitwarden/cli/releases/download/v1.22.1/bw-linux-1.22.1.zip
+  bw-client-id:
+    description: 'Bw client id'
+    required: true
+  bw-client-secret:
+    description: 'Bw client secrets'
+    required: true
+  vault-url:
+    description: 'Vault url'
+    required: true
+  vault-master-password:
+    description: 'vault-master-password'
+    required: true
+  vault-folders:
+    description: 'Folders with secrets in vault'
+    required: true
+    default: c6a3b6d2-1a39-45c7-b28c-d859efbec3eb
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install bw cli
+      shell: bash
+      run: |
+        wget -O bw-cli.zip ${{ inputs.bw-cli-path }}
+        unzip bw-cli.zip
+        rm -rf bw-cli.zip
+        chmod +x bw
+
+        ./bw --version
+
+    - name: bw login
+      shell: bash
+      env:
+        BW_CLIENTID: ${{ inputs.bw-client-id }}
+        BW_CLIENTSECRET: ${{ inputs.bw-client-secret }}
+      run: |
+        ./bw config server ${{inputs.vault-url}}
+        ./bw login --apikey
+
+    - name: Get secrets
+      shell: bash
+      env:
+        BW_PASSWORD: ${{ inputs.vault-master-password }}
+        VAULT-FOLDERS: ${{ inputs.vault-folders }}
+      run: |
+        # Doker-Secrets
+        export BW_SESSION=$(./bw unlock --passwordenv BW_PASSWORD --raw)
+
+        IFS=',' read -ra ADDR <<< "${{env.VAULT-FOLDERS}}"
+        for i in "${ADDR[@]}"; do
+          echo "# process folder: $i"
+          ./bw list items --folderid $i | jq -r  > $i.json
+        done
+
+        ./bw logout
+        ls -la
+
+    - name: Generate secrets
+      shell: python
+      run: |
+        import json
+        import os
+
+        folders_name_str = "${{ inputs.vault-folders }}"
+        folders_name= folders_name_str.split(',')
+        print(folders_name)
+
+        result = list()
+        for folder in folders_name:
+
+            file_name = f"{folder}.json"
+            with open(file_name,'r') as f:
+              content_file = json.load(f)
+              content_file_filtered = [
+                {"name": item["name"], "password": item["login"]["password"]}
+                for item in content_file
+              ]
+              result.extend(content_file_filtered)
+            os.remove(file_name)
+
+        for item in result:
+          with open(f"{item['name']}.txt", "w") as f:
+            f.write(f"{item['name']} {item['password']}")
+
+
+    - name: Set secrets to GH
+      id: set-secrets
+      shell: bash
+      run: |
+        for i in *.txt; do
+            [ -f "$i" ] || break
+            gh secret set ${i%.txt} < $i
+        done
+
+    - name: ls files
+      run: |
+        ls -la
+
+    - name: Check if secrets got
+      run: |
+        count=$(ls -1 *.txt 2>/dev/null | wc -l)
+        if [ $count != 0 ]; then 
+          echo "txt files does exist."
+        else
+          echo "txt files does not exist."
+          exit 1
+        fi 

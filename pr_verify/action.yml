@@ -1,0 +1,20 @@
+name: 'PR verify'
+description: 'Check docker compose'
+inputs:
+  compose-name:
+    description: 'Compose name'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v3
+
+    - name: Validate docker-compose.yaml
+      run: |
+        echo Checking ${{ inputs.compose-name }} 
+        docker compose config

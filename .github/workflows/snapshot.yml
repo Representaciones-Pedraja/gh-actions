@@ -1,0 +1,56 @@
+name: Generate-Snapshot
+run-name: " Generate-Snapshot"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 23 * * 0"
+
+env:
+  WORKFLOW_VERSION: 1.0.0
+
+jobs:
+  generate-snapshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: generate snapshot
+        run: |
+          echo Generate Bearer Token
+          ACCESS_TOKEN=$(curl -s -d "client_id=${{secrets.CONTABO_CLIENT_ID}}" -d "client_secret=${{secrets.CONTABO_CLIENT_SECRET}}" --data-urlencode "username=${{secrets.CONTABO_API_USER}}" --data-urlencode "password=${{secrets.CONTABO_API_PASSWORD}}" -d 'grant_type=password' '${{vars.CONTABO_AUTH_URL}}' | jq -r '.access_token')
+
+          echo get list of your instances
+          instanceIds=$(curl -s -X GET -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "x-request-id: $(uuidgen)" "https://api.contabo.com/v1/compute/instances" | jq -r '.data[].instanceId')
+          echo $instanceIds
+
+          for instanceId in $instanceIds
+          do
+            echo "################"
+            echo " Getting snapshots in instance ID: $instanceId"
+            curl -s -X GET "https://api.contabo.com/v1/compute/instances/${instanceId}/snapshots" -H 'Content-Type: application/json' -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "x-request-id: $(uuidgen)" | jq '[.data[] | {snapshotId: .snapshotId, createdDate: .createdDate}] | sort_by(.createdDate)  '
+
+
+
+            # to delete old snapshots
+            echo "Getting oldest snapshot"
+            OLD_SNAPSHOT=$(curl -s -X GET "https://api.contabo.com/v1/compute/instances/${instanceId}/snapshots" -H 'Content-Type: application/json' -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "x-request-id: $(uuidgen)" | jq -r '[.data[] | {snapshotId: .snapshotId, createdDate: .createdDate}] | sort_by(.createdDate)  [0].snapshotId')
+            echo "Oldest snapshot: $OLD_SNAPSHOT"
+
+
+            # DELETE OLD SNAPSHOT
+            if [[ $OLD_SNAPSHOT == snap* ]];
+            then
+              echo "Deleting old snapshot $OLD_SNAPSHOT"
+              curl -s -X DELETE "https://api.contabo.com/v1/compute/instances/${instanceId}/snapshots/${OLD_SNAPSHOT}" -H 'Content-Type: application/json' -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "x-request-id: $(uuidgen)"
+              sleep 3
+            fi
+
+
+            echo "Instance ID: $instanceId"
+            echo "Creating snapshot for instance $instanceId"
+            curl -s -X POST -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "x-request-id: $(uuidgen)" -H "Content-Type: application/json" -d '{"name":"Snapshot-from-gh","description":"Snapshot-from-gh-Description"}' "https://api.contabo.com/v1/compute/instances/${instanceId}/snapshots" | jq
+
+            echo "Finished snapshot instance ID: $instanceId"
+
+
+          done
