@@ -84,7 +84,6 @@ runs:
                   for item in content_file
               ]
 
-
               content_file_filtered = [
                   item for item in content_file if not str(item["name"]).endswith("_b64")
               ]
