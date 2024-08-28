@@ -1,7 +1,7 @@
 name: 'Restart service'
 description: 'Restart service by name'
 inputs:
-  docker-name:
+  compose-name:
     description: 'Docker name'
     required: true
   ssh-host:
@@ -30,10 +30,10 @@ runs:
 
             echo "################"
             echo "Stoping services ..."
-            sudo docker compose -p  ${{ inputs.docker-name }} stop
+            sudo docker compose -p  ${{ inputs.compose-name }} stop
             echo "################"
             echo "Starting services ..."
-            sudo docker compose -p  ${{ inputs.docker-name }} start
+            sudo docker compose -p  ${{ inputs.compose-name}} start
 
       - name: Notify Command Success
         run: echo "Command executed on   ${{ inputs.ssh-host }} successfully!"

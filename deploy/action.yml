@@ -1,0 +1,56 @@
+name: 'Deploy service'
+description: 'Deploy service by name'
+inputs:
+  compose-name:
+    description: 'Docker name'
+    required: true
+  ssh-host:
+    description: 'SSH host'
+    required: true
+  ssh-user:
+    description: 'SSH user'
+    required: true
+  ssh-private-key:
+    description: 'SSH private key'
+    required: true
+ 
+runs:
+  using: "composite"
+  steps:
+
+      - name: Run cleanup command via SSH
+        id: ssh-cleanup
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ inputs.ssh-host }}
+          username:  ${{ inputs.ssh-user }}
+          key: ${{ inputs.ssh-private-key }}
+
+          script: |
+            echo "Cleanup"
+            sudo docker compose -p ${{ inputs.compose-name }} down
+            rm -rf ${{ inputs.compose-name }} || true
+
+      - name: copy using password
+        uses: srueda99/scp-action@v12
+        with:
+          port: 22
+          host:  ${{ inputs.ssh-host }}
+          origin: "./*.*"
+          destination: "/var/lib/docker-deploy/${{ inputs.compose-name }}"
+          username: ${{ inputs.ssh-user }}
+          key: ${{ inputs.ssh-private-key }}
+
+      - name: Run remote command via SSH
+        id: ssh-command
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:  ${{ inputs.ssh-host }}
+          username: ${{ inputs.ssh-user }}
+          key: ${{ inputs.ssh-private-key }}
+
+          script: |
+            echo "move to ${{ inputs.compose-name }} directory"s
+            cd ${{ inputs.compose-name }}
+            echo "Run docker compose up"
+            sudo docker compose up -d
