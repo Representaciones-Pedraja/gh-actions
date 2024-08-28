@@ -37,4 +37,4 @@ runs:
 
       - name: Notify Command Success
         shell: bash
-        run: echo "Command executed on   ${{ inputs.ssh-host }} successfully!"
+        run: echo "Command executed on ${{ inputs.ssh-host }} successfully!"
