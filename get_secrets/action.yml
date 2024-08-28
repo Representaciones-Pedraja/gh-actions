@@ -98,3 +98,17 @@ runs:
             [ -f "$i" ] || break
             gh secret set ${i%.txt} < $i
         done
+
+    - name: ls files
+      run: |
+        ls -la
+
+    - name: Check if secrets got
+      run: |
+        count=$(ls -1 *.txt 2>/dev/null | wc -l)
+        if [ $count != 0 ]; then 
+          echo "txt files does exist."
+        else
+          echo "txt files does not exist."
+          exit 1
+        fi 
