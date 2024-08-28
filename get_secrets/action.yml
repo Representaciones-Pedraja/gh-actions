@@ -67,6 +67,7 @@ runs:
       run: |
         import json
         import os
+        import base64
 
         folders_name_str = "${{ inputs.vault-folders }}"
         folders_name= folders_name_str.split(',')
