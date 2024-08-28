@@ -1,0 +1,39 @@
+name: 'Restart service'
+description: 'Restart service by name'
+inputs:
+  docker-name:
+    description: 'Docker name'
+    required: true
+  ssh-host:
+    description: 'SSH host'
+    required: true
+  ssh-user:
+    description: 'SSH user'
+    required: true
+  ssh-private-key:
+    description: 'SSH private key'
+    required: true
+ 
+runs:
+  using: "composite"
+  steps:
+
+      - name: Run remote command via SSH
+        id: ssh-command
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:  ${{ inputs.ssh-host }}
+          username:  ${{ inputs.ssh-user }}
+          key:  ${{ inputs.ssh-private-key }}
+
+          script: |
+
+            echo "################"
+            echo "Stoping services ..."
+            sudo docker compose -p  ${{ inputs.docker-name }} stop
+            echo "################"
+            echo "Starting services ..."
+            sudo docker compose -p  ${{ inputs.docker-name }} start
+
+      - name: Notify Command Success
+        run: echo "Command executed on   ${{ inputs.ssh-host }} successfully!"
