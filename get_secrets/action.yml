@@ -79,20 +79,22 @@ runs:
             file_name = f"{folder}.json"
             with open(file_name,'r') as f:
               content_file = json.load(f)
-              
-              content_file_filtered = [
-                {"name": item["name"].lower(), "password": item["login"]["password"]}
+              content_file = [
+                {"name": str(item["name"]).lower(), "password": item["login"]["password"]}
                 for item in content_file
-                if not str(item["name"]).lower().endswith("_b64")
+              ]              
+              content_file_filtered = [
+                {"name": item["name"], "password": item["login"]["password"]}
+                for item in content_file
+                if not str(item["name"]).endswith("_b64")
               ]
               content_file_b64_filtered = [
-                {"name":  str(item["name"]).lower().rstrip("_b64"), "password": base64.b64decode(item["login"]["password"]).decode()}
+                {"name":  str(item["name"]).rstrip("_b64"), "password": base64.b64decode(item["login"]["password"]).decode()}
                 for item in content_file
-                if str(item["name"]).lower().endswith("_b64")
-              ]
-              content_file_filtered.extend(content_file_b64_filtered)
-
+                if str(item["name"]).endswith("_b64")
+              ]              
               result.extend(content_file_filtered)
+              result.extend(content_file_b64_filtered)
             os.remove(file_name)
 
         for item in result:
