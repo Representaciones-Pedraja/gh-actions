@@ -107,7 +107,7 @@ runs:
         for item in result:
           print(f"# Writting {item['name']}.txt")
           with open(f"{item['name']}.txt", "w") as f:
-            f.write(f"{item['name']} {item['password']}")
+            f.write(f"{item['password']}")
 
 
     - name: Set secrets to GH
