@@ -17,7 +17,7 @@ jobs:
       - name: generate snapshot
         run: |
           echo Generate Bearer Token
-          ACCESS_TOKEN=$(curl -s -d "client_id=${{secrets.CONTABO_CLIENT_ID}}" -d "client_secret=${{secrets.CONTABO_CLIENT_SECRET}}" --data-urlencode "username=${{secrets.CONTABO_API_USER}}" --data-urlencode "password=${{secrets.CONTABO_API_PASSWORD}}" -d 'grant_type=password' '${{vars.CONTABO_AUTH_URL}}' | jq -r '.access_token')
+          ACCESS_TOKEN=$(curl -s -d "client_id=${{secrets.CONTABO_CLIENT_ID}}" -d "client_secret=${{secrets.CONTABO_CLIENT_SECRETS}}" --data-urlencode "username=${{secrets.CONTABO_API_USER}}" --data-urlencode "password=${{secrets.CONTABO_API_PASSWORD}}" -d 'grant_type=password' '${{vars.CONTABO_AUTH_URL}}' | jq -r '.access_token')
 
           echo get list of your instances
           instanceIds=$(curl -s -X GET -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "x-request-id: $(uuidgen)" "https://api.contabo.com/v1/compute/instances" | jq -r '.data[].instanceId')
