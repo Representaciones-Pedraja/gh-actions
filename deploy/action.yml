@@ -30,6 +30,7 @@ runs:
             echo "Cleanup"
             sudo docker compose -p ${{ inputs.compose-name }} down
             rm -rf ${{ inputs.compose-name }} || true
+            mkdir -p ${{ inputs.compose-name }}
 
       - name: copy using password
         uses: srueda99/scp-action@v12
