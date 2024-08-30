@@ -32,12 +32,18 @@ runs:
             rm -rf ${{ inputs.compose-name }} || true
             mkdir -p ${{ inputs.compose-name }}
 
+      - name: genmerate tar
+        shell: bash
+        run: |
+          tar -czvf ${{ inputs.compose-name }}.tar.gz *
+        
+
       - name: copy using password
         uses: srueda99/scp-action@v12
         with:
           port: 22
           host:  ${{ inputs.ssh-host }}
-          origin: "."
+          origin: "./${{ inputs.compose-name }}.tar.gz"
           destination: "/var/lib/docker-deploy/${{ inputs.compose-name }}"
           username: ${{ inputs.ssh-user }}
           key: ${{ inputs.ssh-private-key }}
@@ -53,5 +59,6 @@ runs:
           script: |
             echo "move to ${{ inputs.compose-name }} directory"s
             cd ${{ inputs.compose-name }}
+            tar -xzvf ${{ inputs.compose-name }}.tar.gz
             echo "Run docker compose up"
             sudo docker compose up -d
