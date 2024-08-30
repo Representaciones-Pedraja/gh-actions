@@ -37,7 +37,7 @@ runs:
         with:
           port: 22
           host:  ${{ inputs.ssh-host }}
-          origin: "./*"
+          origin: "."
           destination: "/var/lib/docker-deploy/${{ inputs.compose-name }}"
           username: ${{ inputs.ssh-user }}
           key: ${{ inputs.ssh-private-key }}
