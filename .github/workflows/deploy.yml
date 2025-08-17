@@ -1,0 +1,24 @@
+name: Deploy to two servers
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        host: [${{ secrets.PEDRAJA_SSH_HOST }}, ${{ secrets.PEDRAJA_SSH_HOST_2 }}]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy services
+        uses: ./deploy/action.yml
+        with:
+          compose-name: "pedraja-docker"
+          ssh-host: ${{ matrix.host }}
+          ssh-user: "docker-deploy"
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
