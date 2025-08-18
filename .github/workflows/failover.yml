@@ -38,10 +38,4 @@ jobs:
           curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/dns_records/$RECORD_ID" \
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            --data "{
-              \"type\":\"A\",
-              \"name\":\"$DOMAIN\",
-              \"content\":\"$TARGET_IP\",
-              \"ttl\":120,
-              \"proxied\":true
-            }"
+            --data "{\"type\":\"A\",\"name\":\"$DOMAIN\",\"content\":\"$TARGET_IP\",\"ttl\":120,\"proxied\":true}"
