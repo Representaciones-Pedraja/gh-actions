@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        host: [${{ secrets.PEDRAJA_SSH_HOST }}, ${{ secrets.PEDRAJA_SSH_HOST_2 }}]
+        include:
+          - host: ${{ secrets.PEDRAJA_SSH_HOST }}
+          - host: ${{ secrets.PEDRAJA_SSH_HOST_2 }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
