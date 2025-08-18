@@ -1,0 +1,50 @@
+name: Failover Check
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # cada 60 minutos
+  workflow_dispatch:        # también se puede lanzar a mano
+
+jobs:
+  failover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chequear servidor 1
+        id: health
+        run: |
+          if curl -s --max-time 5 http://217.76.49.159 > /dev/null; then
+            echo "status=up" >> $GITHUB_OUTPUT
+          else
+            echo "status=down" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Actualizar DNS para varios dominios
+        run: |
+          DOMAINS=("pedraja.eu" "pedraja.com.es" "pdrj.es")
+          for DOMAIN in "${DOMAINS[@]}"; do
+            echo "Procesando $DOMAIN"
+            
+            # Obtener ID del registro DNS
+            RECORD_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/dns_records?type=A&name=$DOMAIN" \
+              -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+              -H "Content-Type: application/json" | jq -r '.result[0].id')
+            
+            # Determinar IP según estado del servidor 1
+            if [ "${{ steps.health.outputs.status }}" = "down" ]; then
+              TARGET_IP="161.97.79.190"
+            else
+              TARGET_IP="217.76.49.159"
+            fi
+
+            # Actualizar el registro DNS
+            curl -X PUT "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/dns_records/$RECORD_ID" \
+              -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              --data "{
+                \"type\":\"A\",
+                \"name\":\"$DOMAIN\",
+                \"content\":\"$TARGET_IP\",
+                \"ttl\":120,
+                \"proxied\":true
+              }"
+          done
