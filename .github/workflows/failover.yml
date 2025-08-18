@@ -2,7 +2,7 @@ name: Failover Check
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # cada 5 minutos
+    - cron: "*/40 * * * *"   # cada 40 minutos
   workflow_dispatch:
 
 jobs:
