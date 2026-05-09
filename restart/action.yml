@@ -20,7 +20,7 @@ runs:
 
       - name: Run remote command via SSH
         id: ssh-command
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host:  ${{ inputs.ssh-host }}
           username:  ${{ inputs.ssh-user }}
