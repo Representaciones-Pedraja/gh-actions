@@ -36,7 +36,7 @@ runs:
           tar -czvf ${{ inputs.compose-name }}.tar.gz * 
 
       - name: Copy using SCP
-        uses: srueda99/scp-action@v12
+        uses: srueda99/scp-action@v13
         with:
           port: 22
           host: ${{ inputs.ssh-host }}
